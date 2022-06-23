@@ -1,0 +1,46 @@
+{
+  "name": "Supabase Chrome MV2",
+  "version": "0.01",
+  "description": "Supabase Chrome MV2",
+  "background":{
+    "page": "background.html",
+    "persistent": false
+  },
+  "manifest_version": 2,
+  "content_security_policy": "script-src 'self' https://taipmbjjdinrkqjzhsmm.supabase.co; object-src 'self'",
+  // new stuff
+  "browser_action": {
+    "default_title": "Trigger",  // optional, shown in tooltip
+    "default_popup": "newtab.html"    // optional
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "css": [
+        "inject/css/inject.css"
+      ]
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "inject/js/jquery.min.js",
+        "inject/js/content_script.js"
+      ]
+    }
+  ],
+  "permissions": [
+    "activeTab",
+    "http://*/*",
+    "https://*/*"
+  ],
+  "web_accessible_resources": [
+    "inject/js/content_inject.js",
+    "inject/js/page_edit_on.js",
+    "inject/js/page_edit_off.js",
+    "inject/js/jquery.min.js"
+  ]
+}

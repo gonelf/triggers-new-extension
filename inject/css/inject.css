@@ -1,0 +1,46 @@
+/* bounding boxes */
+.trgg_edit_box{
+  /* box-shadow: inset 0px 0px 10px #800080; */
+  /* -webkit-box-shadow: 0px 0px 8px 5px #FFFFFF, 0px 0px 5px 5px #4400FF;
+  box-shadow: 0px 0px 8px 5px #FFFFFF, 0px 0px 5px 5px #4400FF; */
+  background-color: #d2c52c;
+  z-index: 200000;
+  position: fixed;
+}
+
+.trgg_edit_box_top{
+  width: 100%;
+  height: 5px;
+  top: 0px;
+  left: 0px;
+}
+
+.trgg_edit_box_left{
+  width: 5px;
+  height: 100%;
+  top: 0px;
+  left: 0px;
+}
+
+.trgg_edit_box_bottom{
+  width: 100%;
+  height: 5px;
+  bottom: 0px;
+  left: 0px;
+}
+
+.trgg_edit_box_right{
+  width: 5px;
+  height: 100%;
+  top: 0px;
+  right: 0px;
+}
+
+/* event editor */
+.trgg_event_editor {
+  background-color: white;
+  position: absolute;
+  z-index: 200000;
+  padding: 10px;
+  border: solid 1px black;
+}
