@@ -26,36 +26,44 @@ var jq = jQuery.noConflict();
 	}
 
 	function create_event_editor(top, left, width=0) {
-		return '<div id="editor" class="trgg_event_editor" style="top: '+top+'px; left: '+left+'px;">'+
-			'<h5 id"editor_title" class="editor_title">Add event</h5>'+
-			'<hr/>'+
-			'<p>Trigger type</p>'+
-			'<form id="editor_form">'+
-			'<select name="trigger" id="editor_trigger">'+
-				'<option value="click">Click</option>'+
-				'<option value="submit">Submit</option>'+
-				'<option value="pageload">PageLoad</option>'+
-			'</select>'+
-			'<p>Name</p>'+
-			'<input type="text" name="name" id="editor_name" />'+
-			'<p>Event properties</p>'+
-				'<div id="editor_event_properties">'+
-				'<input type="text" id="prop0_key" name="prop1_key" placeholder="Key" />'+
-				'<input type="text" id="prop0_value" name="prop1_value" placeholder="Value"/>'+
-				'<input type="button" class="editor_add_property" value="+ property" />'+
-				'</div>'+
-			'<p>Location</p>'+
-			'<select name="page" id="editor_page">'+
-				'<option value="this">This page</option>'+
-				'<option value="any">Any page</option>'+
-			'</select>'+
-			'<hr/>'+
-			'<input type="button" class="editor_close" value="Cancel" />'+
-			'<input type="button" class="editor_save" value="Save" />'+
-			'<input type="button" class="editor_update" value="Update" />'+
-			'<input type="hidden" class="editor_event_id" value="" />'+
-			'</form>'+
-		'</div>';
+		return `
+		<div id="editor" class="trgg_event_editor" style="top: ${top}px; left: ${left}px;">
+			<div class="trgg_editor_header">
+				<div style="float: left">
+					<h5 id"editor_title" class="editor_title">Add event</h5>
+				</div>
+				<div style="float: right">
+					<input type="button" class="editor_close" value="Close" />
+				</div>
+			</div>
+			<hr/>
+			<p>Trigger type</p>
+			<form id="editor_form">
+				<select name="trigger" id="editor_trigger">
+					<option value="click">Click</option>
+					<option value="submit">Submit</option>
+					<option value="pageload">PageLoad</option>
+				</select>
+				<p>Name</p>
+				<input type="text" name="name" id="editor_name" />
+				<p>Event properties</p>
+				<div id="editor_event_properties">
+					<input type="text" id="prop0_key" name="prop1_key" placeholder="Key" />
+					<input type="text" id="prop0_value" name="prop1_value" placeholder="Value"/>
+					<input type="button" class="editor_add_property" value="+ property" />
+				</div>
+				<p>Location</p>
+			 	<select name="page" id="editor_page">
+					<option value="this">This page</option>
+					<option value="any">Any page</option>
+				</select>
+				<hr/>
+				<input type="button" class="editor_delete" value="Delete" />
+				<input type="button" class="editor_save" value="Save" />
+				<input type="button" class="editor_update" value="Update" />
+				<input type="hidden" class="editor_event_id" value="" />
+			</form>
+		</div>`;
 	}
 
 	function clean(){
@@ -127,7 +135,6 @@ var jq = jQuery.noConflict();
 		});
 	}
 
-
 	function add_event(data){
 		console.log("add event");
 		console.log(data);
@@ -135,6 +142,20 @@ var jq = jQuery.noConflict();
 		jq(target).addClass("trigger_identify_events");
 		jq(target).attr("trigger_event_count", trigger_page_events.length)
 		trigger_page_events.push(data);
+	}
+
+	function delete_event(data){
+		console.log("delete event");
+		console.log(data);
+		jq(target).removeClass("trigger_event");
+		jq(target).removeClass("trigger_identify_events");
+		jq(target).removeAttr("trigger_event_count");
+
+		trigger_page_events.forEach((event, i) => {
+			if (event.UID === data.UID) {
+				delete trigger_page_events[i];
+			}
+		});
 	}
 
 
@@ -166,7 +187,7 @@ var jq = jQuery.noConflict();
 
 			if(event.data.type
 		    && (event.data.type == "TO_PAGE")
-		    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "dalete")
+		    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "delete")
 		    && typeof chrome.app.isInstalled !== 'undefined'){
 					let resp = event.data.data;
 
@@ -176,6 +197,9 @@ var jq = jQuery.noConflict();
 						}
 						if (event.data.action === "update") {
 							update_event(resp.data[0]);
+						}
+						if (event.data.action === "delete") {
+							delete_event(resp.data[0]);
 						}
 
 						toastr.success(resp.message);
@@ -254,15 +278,15 @@ var jq = jQuery.noConflict();
 		// 		update_status();
 		// 	}
 		// });
-
-		jq(document).on("click", ".delete, .editor_delete", function(e){
-			if(page_edit_on){
-				console.log("delete");
-				console.log("target", target);
-				jq(target).remove();
-				page_edit_change_status = "delete";
-			}
-		});
+		//
+		// jq(document).on("click", ".delete, .editor_delete", function(e){
+		// 	if(page_edit_on){
+		// 		console.log("delete");
+		// 		console.log("target", target);
+		// 		jq(target).remove();
+		// 		page_edit_change_status = "delete";
+		// 	}
+		// });
 		// font colorpicker
 		jq(document).on("input", ".font-colorpicker", function(e){
 			if(page_edit_on){
@@ -374,6 +398,35 @@ var jq = jQuery.noConflict();
 				var data = {xpath: xpath, name: name, trigger: trigger, properties: properties, page: page, UID: UID}
 				// console.log(data);
 				window.postMessage({ type: "FROM_PAGE", action: "update", data: data });
+			}
+		});
+
+		jq(document).on("click", ".editor_delete", function(e){
+			if(page_edit_on){
+				console.log("editor delete");
+				// var trigger = jq("#editor_trigger").val();
+				// var name = jq("#editor_name").val();
+				// var xpath = getPathTo(target);
+				// var props = jq("#editor_event_properties :text");
+				// var properties = {};
+				// for (var i = 0; i < props.length; i+=2) {
+				// 	properties[props[i].value] = props[i+1].value;
+				// }
+				// var page = jq("#editor_page").val();
+				// if(page === "this") page = window.location.href.split("?")[0]
+
+				var r = confirm("Are you sure you want to delete this event?");
+				if (r === true) {
+					var UID = jq(".editor_event_id").val();
+
+					// send message to content_script
+					var data = {UID: UID}
+					// console.log(data);
+					window.postMessage({ type: "FROM_PAGE", action: "delete", data: data });
+				} else {
+				  // txt = "You pressed Cancel!";
+				}
+
 
 			}
 		});

@@ -93,7 +93,7 @@ window.addEventListener("message", function(event){
 
   if(event.data.type
     && (event.data.type == "FROM_PAGE")
-    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "dalete")
+    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "delete")
     && typeof chrome.app.isInstalled !== 'undefined'){
       // send message to bg-supa
       if (event.data.action === "save"){
@@ -108,6 +108,13 @@ window.addEventListener("message", function(event){
         chrome.runtime.sendMessage({command: "event_update:Action", data: event.data.data}, (response) => {
           // console.log(response);
           window.postMessage({ type: "TO_PAGE", action: "update", data: response });
+        });
+      }
+
+      if (event.data.action === "delete"){
+        chrome.runtime.sendMessage({command: "event_delete:Action", data: event.data.data}, (response) => {
+          // console.log(response);
+          window.postMessage({ type: "TO_PAGE", action: "delete", data: response });
         });
       }
     }
