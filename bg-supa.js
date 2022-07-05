@@ -78,6 +78,43 @@ const handleMessage = async function(msg, sender, response){
       response({type: "action", status: "page_edit_off", message: true});
     }
   }
+  if (msg.command === "event_save:Action") {
+    console.log(msg.data);
+    msg.data['user_id'] = supabase.auth.user().id;
+    // save event
+    const { data, error } = await supabase
+    .from('events')
+    .insert([
+      msg.data
+    ])
+
+    if (data) {
+      // send response
+      response({type: "action", status: true, message: "event saved", data: data});
+    }
+    else {
+      response({type: "action", status: false, message: "event not saved", data: error});
+    }
+  }
+  if (msg.command === "event_update:Action") {
+    console.log(msg.data);
+    msg.data['user_id'] = supabase.auth.user().id;
+    // save event
+    var UID = msg.data.UID
+    delete msg.data.UID;
+    const { data, error } = await supabase
+    .from('events')
+    .update( msg.data )
+    .eq('UID', UID)
+
+    if (data) {
+      // send response
+      response({type: "action", status: true, message: "event updated", data: data});
+    }
+    else {
+      response({type: "action", status: false, message: "event not updated", data: error});
+    }
+  }
   else {
     response({type: "unknown", status: "nothing done", message: false});
   }
@@ -89,3 +126,10 @@ chrome.runtime.onMessage.addListener((msg, sender, response) => {
   handleMessage(msg, sender, response);
   return true;
 });
+
+//
+// // listen to messages from the web
+// chrome.runtime.onMessageExternal.addListener(function(request, sender, response){
+//   console.log("external message");
+//   handleMessage("message form the web: "+request, sender, response);
+// });

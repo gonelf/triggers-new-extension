@@ -27,12 +27,12 @@
         "<all_urls>"
       ],
       "js": [
-        "inject/js/jquery.min.js",
         "inject/js/content_script.js"
       ]
     }
   ],
   "permissions": [
+    "tabs",
     "activeTab",
     "http://*/*",
     "https://*/*"
@@ -41,6 +41,13 @@
     "inject/js/content_inject.js",
     "inject/js/page_edit_on.js",
     "inject/js/page_edit_off.js",
-    "inject/js/jquery.min.js"
-  ]
+    "inject/js/jquery.min.js",
+    "inject/js/toastr.min.js",
+    "inject/css/toastr.min.css"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://da1c-79-169-178-176.eu.ngrok.io/*"
+    ]
+  }
 }

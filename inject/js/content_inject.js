@@ -27,23 +27,34 @@ var jq = jQuery.noConflict();
 
 	function create_event_editor(top, left, width=0) {
 		return '<div id="editor" class="trgg_event_editor" style="top: '+top+'px; left: '+left+'px;">'+
-			'<h5>Add event</h5>'+
+			'<h5 id"editor_title" class="editor_title">Add event</h5>'+
 			'<hr/>'+
 			'<p>Trigger type</p>'+
-			'<select>'+
-				'<option value=”click”>Click</option>'+
-				'<option value=”submit”>Submit</option>'+
-				'<option value=”pageload”>PageLoad</option>'+
+			'<form id="editor_form">'+
+			'<select name="trigger" id="editor_trigger">'+
+				'<option value="click">Click</option>'+
+				'<option value="submit">Submit</option>'+
+				'<option value="pageload">PageLoad</option>'+
 			'</select>'+
 			'<p>Name</p>'+
-			'<input type="text" name="Event name" />'+
+			'<input type="text" name="name" id="editor_name" />'+
 			'<p>Event properties</p>'+
-			'<input type="text" name="prop1_key" placeholder="Key" />'+
-			'<input type="text" name="prop1_value" placeholder="Value"/>'+
-			'<input type="button" class="editor_add_property" value="+ property" />'+
+				'<div id="editor_event_properties">'+
+				'<input type="text" id="prop0_key" name="prop1_key" placeholder="Key" />'+
+				'<input type="text" id="prop0_value" name="prop1_value" placeholder="Value"/>'+
+				'<input type="button" class="editor_add_property" value="+ property" />'+
+				'</div>'+
+			'<p>Location</p>'+
+			'<select name="page" id="editor_page">'+
+				'<option value="this">This page</option>'+
+				'<option value="any">Any page</option>'+
+			'</select>'+
 			'<hr/>'+
 			'<input type="button" class="editor_close" value="Cancel" />'+
 			'<input type="button" class="editor_save" value="Save" />'+
+			'<input type="button" class="editor_update" value="Update" />'+
+			'<input type="hidden" class="editor_event_id" value="" />'+
+			'</form>'+
 		'</div>';
 	}
 
@@ -88,9 +99,47 @@ var jq = jQuery.noConflict();
 		page_edit_change_status = "none";
 	}
 
+	function getPathTo(element) {
+    if (element.id!=='')
+        return 'id("'+element.id+'")';
+    if (element===document.body)
+        return "HTML/"+element.tagName;
+
+    var ix= 0;
+    var siblings= element.parentNode.childNodes;
+    for (var i= 0; i<siblings.length; i++) {
+        var sibling= siblings[i];
+
+        if (sibling===element)
+            return getPathTo(element.parentNode)+'/'+element.tagName+'['+(ix+1)+']';
+        if (sibling.nodeType===1 && sibling.tagName===element.tagName)
+            ix++;
+    }
+	}
+
+	function update_event(data){
+		console.log("upddate event data");
+		console.log(data);
+		trigger_page_events.forEach((event, i) => {
+			if (event.UID === data.UID) {
+				trigger_page_events[i] = data;
+			}
+		});
+	}
+
+
+	function add_event(data){
+		console.log("add event");
+		console.log(data);
+		jq(target).addClass("trigger_event");
+		jq(target).addClass("trigger_identify_events");
+		jq(target).attr("trigger_event_count", trigger_page_events.length)
+		trigger_page_events.push(data);
+	}
+
 
 	var page_edit_on = false;
-	var target=null, fontcolor, bgcolor;
+	var target=null, fontcolor, bgcolor, target_infos;
 	var page_edit_status = "none", page_edit_change_status = "none";
 	var page_edit_status_interval;
 	var page_edit_elements = ["editor", "delete"];
@@ -105,12 +154,46 @@ var jq = jQuery.noConflict();
 		console.log("Hello. This message was sent from scripts/inject.js");
 		// ----------------------------------------------------------
 
+		// jq( "form" ).on( "submit", function( event ) {
+		//   event.preventDefault();
+		//   // console.log( $( this ).serialize() );
+		// });
+
 		page_edit_status_interval = setInterval(update_status, 10);
+		// get messa from content script
+		window.addEventListener("message", function(event){
+			console.log("content inject");
+
+			if(event.data.type
+		    && (event.data.type == "TO_PAGE")
+		    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "dalete")
+		    && typeof chrome.app.isInstalled !== 'undefined'){
+					let resp = event.data.data;
+
+					if (resp.status === true){
+						if (event.data.action === "save"){
+							add_event(resp.data[0])
+						}
+						if (event.data.action === "update") {
+							update_event(resp.data[0]);
+						}
+
+						toastr.success(resp.message);
+		      }
+
+		      if (resp.status === false){
+						toastr.warning(resp.message);
+		      }
+
+					clean();
+		    }
+		}, false);
 
 		jq(document).on("click", "button, a", function(e){
 			//e.preventDefault();
 			id = e.target.id;
 			tag = jq(e.target)[0].nodeName.toLowerCase();
+
 
 			// console.log("page_edit_on", page_edit_on);
 			// console.log("e.target.id", id);
@@ -136,6 +219,25 @@ var jq = jQuery.noConflict();
 				target = this;
 				// jq("body").append(create_delete(top, left+width));
 				jq("body").append(create_event_editor(top+height+margin, left, width));
+				if (jq(this).attr("trigger_event_count")) {
+					target_infos = trigger_page_events[jq(this).attr("trigger_event_count")];
+					console.log(target_infos);
+					jq(".editor_title").text("Edit event");
+					jq("#editor_trigger").val(target_infos.trigger);
+					jq("#editor_name").val(target_infos.name);
+					var prop_keys = Object.keys(target_infos.properties);
+					prop_keys.forEach((key, i) => {
+						jq(`#prop${i}_key`).val(key)
+						jq(`#prop${i}_value`).val(target_infos.properties[key])
+					});
+					console.log(target_infos.page);
+					jq("#editor_page").val("this")
+					if(target_infos.page === "any") {jq("#editor_page").val("any")}
+					jq(".editor_save").hide();
+					jq(".editor_update").show();
+					jq(".editor_event_id").val(target_infos.UID);
+
+				}
 				// jq("body").append(create_editor(0, 0, width));
 				// jq(this).attr("contenteditable", true);
 				// jq(this).focus();
@@ -229,6 +331,50 @@ var jq = jQuery.noConflict();
 			if(page_edit_on){
 				console.log("editor undo");
 				doUndo();
+			}
+		});
+
+		jq(document).on("click", ".editor_save", function(e){
+			if(page_edit_on){
+				console.log("editor save");
+				var trigger = jq("#editor_trigger").val();
+				var name = jq("#editor_name").val();
+				var xpath = getPathTo(target);
+				var props = jq("#editor_event_properties :text");
+				var properties = {};
+				for (var i = 0; i < props.length; i+=2) {
+					properties[props[i].value] = props[i+1].value;
+				}
+				var page = jq("#editor_page").val();
+				if(page === "this") page = window.location.href.split("?")[0]
+				console.log();
+				// send message to content_script
+				var data = {xpath: xpath, name: name, trigger: trigger, properties: properties, page: page}
+				// console.log(data);
+				window.postMessage({ type: "FROM_PAGE", action: "save", data: data });
+			}
+		});
+
+		jq(document).on("click", ".editor_update", function(e){
+			if(page_edit_on){
+				console.log("editor update");
+				var trigger = jq("#editor_trigger").val();
+				var name = jq("#editor_name").val();
+				var xpath = getPathTo(target);
+				var props = jq("#editor_event_properties :text");
+				var properties = {};
+				for (var i = 0; i < props.length; i+=2) {
+					properties[props[i].value] = props[i+1].value;
+				}
+				var page = jq("#editor_page").val();
+				if(page === "this") page = window.location.href.split("?")[0]
+				var UID = jq(".editor_event_id").val();
+
+				// send message to content_script
+				var data = {xpath: xpath, name: name, trigger: trigger, properties: properties, page: page, UID: UID}
+				// console.log(data);
+				window.postMessage({ type: "FROM_PAGE", action: "update", data: data });
+
 			}
 		});
 	}

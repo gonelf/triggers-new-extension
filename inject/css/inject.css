@@ -44,3 +44,22 @@
   padding: 10px;
   border: solid 1px black;
 }
+
+.editor_save {
+  float: right;
+  display: block;
+}
+
+.editor_update {
+  float: right;
+  display: none;
+}
+
+/* trigger events */
+.trigger_event {
+
+}
+
+.trigger_identify_events {
+  border: solid 1px #d2c52c !important;
+}
