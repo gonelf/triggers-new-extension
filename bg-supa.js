@@ -6,6 +6,7 @@ supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 console.log('supabase?', supabase);
 
 var editor_on = false;
+var tracker_on = false;
 
 function handleActions(evt) {
  chrome.tabs.query({active: true, currentWindow: true}, tabs => {
@@ -14,6 +15,30 @@ function handleActions(evt) {
      // do something with config
    });
  });
+}
+
+function handle_editor(response){
+
+      if (editor_on){
+        handleActions("page_edit_on");
+        response({type: "action", status: "page_edit_on", message: true});
+      }
+      else {
+        handleActions("page_edit_off");
+        response({type: "action", status: "page_edit_off", message: true});
+      }
+}
+
+function handle_tracker(response){
+
+      if (tracker_on){
+        handleActions("event_track_on");
+        response({type: "action", status: "event_track_on", message: true});
+      }
+      else {
+        handleActions("event_track_off");
+        response({type: "action", status: "event_track_off", message: true});
+      }
 }
 
 const handleMessage = async function(msg, sender, response){
@@ -67,16 +92,23 @@ const handleMessage = async function(msg, sender, response){
       response({type: "auth", status: "no-auth", message: false});
     }
   }
-  if(msg.command === "page_edit:Action"){
+  if(msg.command === "event_edit:Action"){
     editor_on = editor_on ? false : true;
-    if (editor_on){
-      handleActions("page_edit_on");
-      response({type: "action", status: "page_edit_on", message: true});
+    if (tracker_on) {
+      tracker_on = false;
+      handle_tracker(response);
     }
-    else {
-      handleActions("page_edit_off");
-      response({type: "action", status: "page_edit_off", message: true});
+
+    handle_editor(response);
+  }
+  if(msg.command === "event_track:Action"){
+    tracker_on = tracker_on ? false : true;
+    if (editor_on) {
+      editor_on = false
+      handle_editor(response);
     }
+
+    handle_tracker(response);
   }
   if (msg.command === "event_save:Action") {
     // console.log(msg.data);

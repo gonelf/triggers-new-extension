@@ -19,9 +19,15 @@ document.querySelector('.signup-btn-auth').addEventListener('click', function(){
 document.querySelector('.logout-btn-auth').addEventListener('click', function(){
   logoutFunc();
 });
+
 $("#edit-btn-auth").click(()=>{
-  editFunc();
+  events_edit();
 });
+
+$("#track-btn-auth").click(()=>{
+  events_track();
+});
+
 var signupFunc = function(){
   //Get login details from form...
   var e = document.querySelector('.loginArea .signup-box input[type="email"]').value;
@@ -73,8 +79,15 @@ function sendMessage(command, callback){
   });
 }
 
-var editFunc = function(){
-  chrome.runtime.sendMessage({command: "page_edit:Action"}, (response) => {
+function events_edit (){
+  chrome.runtime.sendMessage({command: "event_edit:Action"}, (response) => {
+    // if (callback) callback(response);
+    console.log(response);
+  });
+}
+
+function events_track (){
+  chrome.runtime.sendMessage({command: "event_track:Action"}, (response) => {
     // if (callback) callback(response);
     console.log(response);
   });

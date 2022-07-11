@@ -84,6 +84,12 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg === "page_edit_off") {
     inject("inject/js/page_edit_off.js", "ext-edit_off");
   }
+  if (msg === "event_track_on") {
+    inject("inject/js/event_tracker_on.js", "ext-tracker_on");
+  }
+  if (msg === "event_track_off") {
+    inject("inject/js/event_tracker_off.js", "ext-tracker_off");
+  }
 });
 
 // receive messages from content_inject

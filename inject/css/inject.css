@@ -68,3 +68,15 @@
 .trigger_identify_events {
   border: solid 1px #d2c52c !important;
 }
+
+/* tracker */
+.event_tracker{
+  width: 20%;
+  border: solid 1px #d2c52c;
+  height: 100%;
+  z-index: 200000;
+  position: fixed;
+  top: 0;
+  right: 0;
+  background-color: white;
+}

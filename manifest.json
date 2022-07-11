@@ -41,6 +41,8 @@
     "inject/js/content_inject.js",
     "inject/js/page_edit_on.js",
     "inject/js/page_edit_off.js",
+    "inject/js/event_tracker_on.js",
+    "inject/js/event_tracker_off.js",
     "inject/js/jquery.min.js",
     "inject/js/toastr.min.js",
     "inject/css/toastr.min.css"
