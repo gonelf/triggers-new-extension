@@ -5,5 +5,4 @@ var boxes = "<box id='edit_box_left' class='trgg_edit_box trgg_edit_box_left'>&n
 "<box id='edit_box_bottom' class='trgg_edit_box_bottom trgg_edit_box'>&nbsp;</box>"+
 "<box id='edit_box_right' class='trgg_edit_box_right trgg_edit_box'>&nbsp;</box>";
 jq("body").append(boxes);
-
-jq(".trigger_event").addClass("trigger_identify_events");
+var trigger_identify_events = setInterval(()=>{jq(".trigger_event").addClass("trigger_identify_events");}, 100)

@@ -26,6 +26,7 @@ var jq = jQuery.noConflict();
 	}
 
 	function create_event_editor(top, left, width=0) {
+		property_count = 1;
 		return `
 		<div id="editor" class="trgg_event_editor" style="top: ${top}px; left: ${left}px;">
 			<div class="trgg_editor_header">
@@ -48,8 +49,8 @@ var jq = jQuery.noConflict();
 				<input type="text" name="name" id="editor_name" />
 				<p>Event properties</p>
 				<div id="editor_event_properties">
-					<input type="text" id="prop0_key" name="prop1_key" placeholder="Key" />
-					<input type="text" id="prop0_value" name="prop1_value" placeholder="Value"/>
+					<input type="text" id="prop0_key" name="prop0_key" placeholder="Key" />
+					<input type="text" id="prop0_value" name="prop0_value" placeholder="Value"/>
 					<input type="button" class="editor_add_property" value="+ property" />
 				</div>
 				<p>Location</p>
@@ -64,6 +65,20 @@ var jq = jQuery.noConflict();
 				<input type="hidden" class="editor_event_id" value="" />
 			</form>
 		</div>`;
+	}
+
+	var property_count = 1;
+
+	function add_event_property(){
+		// jq(".editor_add_property").remove();
+		let property = `
+		<div>
+			<input type="text" id="prop${property_count}_key" name="prop${property_count}_key" placeholder="Key" />
+			<input type="text" id="prop${property_count}_value" name="prop${property_count}_value" placeholder="Value"/>
+			<input type="button" class="remove_property" value="delete" />
+		</div>`;
+		jq("#editor_event_properties").append(property);
+		property_count+=1;
 	}
 
 	function clean(){
@@ -159,12 +174,20 @@ var jq = jQuery.noConflict();
 	}
 
 
+	function arrayContains(needle, arrhaystack)
+	{
+	    return (arrhaystack.indexOf(needle) > -1);
+	}
+
 	var page_edit_on = false;
 	var target=null, fontcolor, bgcolor, target_infos;
 	var page_edit_status = "none", page_edit_change_status = "none";
 	var page_edit_status_interval;
 	var page_edit_elements = ["editor", "delete"];
 	var page_edit_alowed_page_elements = ["button", "a"];
+
+
+	let allowed_actions = ["save", "update", "delete", "update_event_list"];
 
 	var readyStateCheckInterval = setInterval(function() {
 	if (document.readyState === "complete") {
@@ -184,25 +207,49 @@ var jq = jQuery.noConflict();
 		// get messa from content script
 		window.addEventListener("message", function(event){
 			console.log("content inject");
-
+			console.log(event.data.action);
 			if(event.data.type
 		    && (event.data.type == "TO_PAGE")
-		    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "delete")
+		    // && (event.data.action === "save" || event.data.action === "update" ||
+				// 		event.data.action === "delete" || event.data.action === "update_event_list")
+				&& arrayContains(event.data.action, allowed_actions)
 		    && typeof chrome.app.isInstalled !== 'undefined'){
 					let resp = event.data.data;
 
 					if (resp.status === true){
 						if (event.data.action === "save"){
 							add_event(resp.data[0])
+							toastr.success(resp.message);
 						}
 						if (event.data.action === "update") {
 							update_event(resp.data[0]);
+
+							toastr.success(resp.message);
 						}
 						if (event.data.action === "delete") {
 							delete_event(resp.data[0]);
-						}
 
-						toastr.success(resp.message);
+							toastr.success(resp.message);
+						}
+						if (event.data.action === "update_event_list") {
+							console.log(jq("#event_tracker"));
+							if(jq("#event_tracker")){
+								jq("#event_tracker_container").html("");
+								let list = JSON.parse(resp.data);
+								console.log(list);
+								list.reverse().forEach((item, i) => {
+									let event_view = `<div class="tracker_item">
+										<p>#${list.length-i}</p>
+										<div><b>Name: </b>${item.name}</div>
+										<div><b>Trigger:</b> ${item.trigger}</div>
+										<div><b>Properties</b></div>
+										<div>${JSON.stringify(item.properties)}</div>
+									</div>`
+									jq("#event_tracker_container").append(event_view);
+								});
+							}
+ 						}
+
 		      }
 
 		      if (resp.status === false){
@@ -251,6 +298,7 @@ var jq = jQuery.noConflict();
 					jq("#editor_name").val(target_infos.name);
 					var prop_keys = Object.keys(target_infos.properties);
 					prop_keys.forEach((key, i) => {
+						if (i>0) add_event_property();
 						jq(`#prop${i}_key`).val(key)
 						jq(`#prop${i}_value`).val(target_infos.properties[key])
 					});
@@ -404,17 +452,6 @@ var jq = jQuery.noConflict();
 		jq(document).on("click", ".editor_delete", function(e){
 			if(page_edit_on){
 				console.log("editor delete");
-				// var trigger = jq("#editor_trigger").val();
-				// var name = jq("#editor_name").val();
-				// var xpath = getPathTo(target);
-				// var props = jq("#editor_event_properties :text");
-				// var properties = {};
-				// for (var i = 0; i < props.length; i+=2) {
-				// 	properties[props[i].value] = props[i+1].value;
-				// }
-				// var page = jq("#editor_page").val();
-				// if(page === "this") page = window.location.href.split("?")[0]
-
 				var r = confirm("Are you sure you want to delete this event?");
 				if (r === true) {
 					var UID = jq(".editor_event_id").val();
@@ -426,10 +463,22 @@ var jq = jQuery.noConflict();
 				} else {
 				  // txt = "You pressed Cancel!";
 				}
-
-
 			}
 		});
+
+		jq(document).on("click", "#stop_live_tracker", function(e) {
+			if(evtnr_live_on){
+				window.postMessage({ type: "FROM_PAGE", action: "stop_live_tracker" });
+			}
+		});
+		jq(document).on("click", "#clear_live_tracker", function(e) {
+			if(evtnr_live_on){
+				window.postMessage({ type: "FROM_PAGE", action: "clear_live_tracker" });
+			}
+		});
+		jq(document).on("click", ".editor_add_property", function(e){
+			add_event_property();
+		})
 	}
 }, 10);
 // });

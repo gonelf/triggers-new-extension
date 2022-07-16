@@ -67,6 +67,11 @@ function inPageContext(listenTo, respondWith) {
   });
 }
 
+function arrayContains(needle, arrhaystack)
+{
+    return (arrhaystack.indexOf(needle) > -1);
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   console.log(msg);
 
@@ -92,14 +97,22 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
 });
 
+
+
 // receive messages from content_inject
 window.addEventListener("message", function(event){
   console.log("content_script");
-  console.log(event);
+  console.log(event.data.type);
+
+  let allowed_actions = ["save", "update", "delete", "event_trigger",
+  "load_event_list", "stop_live_tracker", "clear_live_tracker"];
 
   if(event.data.type
     && (event.data.type == "FROM_PAGE")
-    && (event.data.action === "save" || event.data.action === "update" || event.data.action === "delete")
+    // && (event.data.action === "save" || event.data.action === "update" ||
+    //     event.data.action === "delete" || event.data.action === "event_trigger" ||
+    //     event.data.action === "load_event_list" || event.data.action === "stop_live_tracker")
+    && arrayContains(event.data.action, allowed_actions)
     && typeof chrome.app.isInstalled !== 'undefined'){
       // send message to bg-supa
       if (event.data.action === "save"){
@@ -121,6 +134,44 @@ window.addEventListener("message", function(event){
         chrome.runtime.sendMessage({command: "event_delete:Action", data: event.data.data}, (response) => {
           // console.log(response);
           window.postMessage({ type: "TO_PAGE", action: "delete", data: response });
+        });
+      }
+      if (event.data.action === "event_trigger") {
+        console.log("event_trigger");
+        console.log(event.data.data);
+        chrome.runtime.sendMessage({command: "event_triggered:Action", data: event.data.data}, (response) => {
+          console.log("response");
+          console.log(response);
+          // if (response.status == true){
+            window.postMessage({ type: "TO_PAGE", action: "update_event_list", data: response });
+          // }
+        });
+      }
+      if (event.data.action === "load_event_list") {
+        console.log("load_event_list");
+        chrome.runtime.sendMessage({command: "event_get_list:Action"}, (response) => {
+          console.log(response);
+          // if (response.status == true){
+            window.postMessage({ type: "TO_PAGE", action: "update_event_list", data: response });
+          // }
+        });
+      }
+      if (event.data.action === "stop_live_tracker") {
+        console.log("stop_live_tracker");
+        chrome.runtime.sendMessage({command: "event_track:Action"}, (response) => {
+          // console.log(response);
+          // if (response.status == true){
+            // window.postMessage({ type: "TO_PAGE", action: "update_event_list", data: response });
+          // }
+        });
+      }
+      if (event.data.action === "clear_live_tracker") {
+        console.log("clear_live_tracker");
+        chrome.runtime.sendMessage({command: "clear_live_tracker:Action"}, (response) => {
+          // console.log(response);
+          // if (response.status == true){
+            window.postMessage({ type: "TO_PAGE", action: "update_event_list", data: response });
+          // }
         });
       }
     }

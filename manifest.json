@@ -1,7 +1,7 @@
 {
-  "name": "Supabase Chrome MV2",
-  "version": "0.01",
-  "description": "Supabase Chrome MV2",
+  "name": "Eventioner",
+  "version": "0.02",
+  "description": "Event tracking made easy",
   "background":{
     "page": "background.html",
     "persistent": false
@@ -34,6 +34,7 @@
   "permissions": [
     "tabs",
     "activeTab",
+    "storage",
     "http://*/*",
     "https://*/*"
   ],
@@ -51,5 +52,11 @@
     "matches": [
       "https://da1c-79-169-178-176.eu.ngrok.io/*"
     ]
+  },
+  "icons": {
+   "16": "/src/16.png",
+   "32": "/src/32.png",
+   "48": "/src/48.png",
+   "128": "/src/128.png"
   }
 }

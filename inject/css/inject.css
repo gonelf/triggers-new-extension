@@ -72,6 +72,8 @@
 /* tracker */
 .event_tracker{
   width: 20%;
+  height: 100%;
+  overflow: scroll;
   border: solid 1px #d2c52c;
   height: 100%;
   z-index: 200000;
@@ -79,4 +81,17 @@
   top: 0;
   right: 0;
   background-color: white;
+}
+
+.event_tracker_container{
+  
+}
+
+.tracker_item {
+  border-bottom: solid 5px lightgray;
+  padding: 10px;
+}
+
+.float_right{
+  float: right;
 }
